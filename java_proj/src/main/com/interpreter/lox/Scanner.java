@@ -1,11 +1,11 @@
-package com.interpreter.lox;
+package main.com.interpreter.lox;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.interpreter.lox.TokenType.*;
+import static main.com.interpreter.lox.TokenType.*;
 
 
 /**
