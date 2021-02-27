@@ -1,0 +1,5 @@
+com/interpreter/lox/Scanner$1.class
+com/interpreter/lox/FailLox.class
+com/interpreter/lox/TokenType.class
+com/interpreter/lox/Scanner.class
+com/interpreter/lox/Token.class
