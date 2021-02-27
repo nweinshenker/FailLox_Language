@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+
 public class FailLox {
   static boolean hadError = false;
   public static void main(String[] args) throws IOException {
@@ -55,7 +56,7 @@ public class FailLox {
 
   private static void run(String source) {
     Scanner scanner = new Scanner(source);
-    List<Token> list = scanner.scanTokens();
+    List<Token> list = scanner.scanTokens(source);
 
     for (Token token: list) {
       System.out.println(token);
