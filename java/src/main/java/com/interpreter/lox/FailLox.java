@@ -43,7 +43,7 @@ public class FailLox {
     String line;
 
     for (;;) {
-      System.out.println("> ");
+      System.out.print("> ");
       line = br.readLine();
       if (line == null) {
         break;
@@ -56,7 +56,7 @@ public class FailLox {
 
   private static void run(String source) {
     Scanner scanner = new Scanner(source);
-    List<Token> list = scanner.scanTokens(source);
+    List<Token> list = scanner.scanTokens();
 
     for (Token token: list) {
       System.out.println(token);

@@ -14,7 +14,6 @@ public class ScannerTest {
         String test = "Name";
         assertEquals(false,false);
         assertEquals(test, "Name");
-        assertEquals("hello", "goodbye");
     }
 
     List<Integer> list = new ArrayList<Integer>();
@@ -31,7 +30,7 @@ public class ScannerTest {
 
     @Test
     public void test_list() {
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < 10; i++) {
             assertEquals(list.get(i), list2.get(i));
         }
     }

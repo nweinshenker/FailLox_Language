@@ -1,45 +1,51 @@
+//> Scanning scanner-class
 package com.interpreter.lox;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import static com.interpreter.lox.TokenType.*;
+import static com.interpreter.lox.TokenType.*; // [static-import]
 
+class Scanner {
+    // > keyword-map
+    private static final Map<String, TokenType> keywords;
 
-/**
- * Starting at the first character of the source code, the Scanner object
- * figures out what lexeme it belongs to, and consumes it and any following
- * characters that are part of that lexeme.
- */
-public class Scanner {
-    private final List<Token> tokens = new ArrayList<Token>();
+    static {
+        keywords = new HashMap<>();
+        keywords.put("and", AND);
+        keywords.put("class", CLASS);
+        keywords.put("else", ELSE);
+        keywords.put("false", FALSE);
+        keywords.put("for", FOR);
+        keywords.put("fun", FUN);
+        keywords.put("if", IF);
+        keywords.put("nil", NIL);
+        keywords.put("or", OR);
+        keywords.put("print", PRINT);
+        keywords.put("return", RETURN);
+        keywords.put("super", SUPER);
+        keywords.put("this", THIS);
+        keywords.put("true", TRUE);
+        keywords.put("var", VAR);
+        keywords.put("while", WHILE);
+    }
+    // < keyword-map
     private final String source;
-
-    private static Map<String, TokenType> keyWords = new HashMap<String, TokenType>() {{
-        keyWords.put("and", TokenType.AND);
-        keyWords.put("or", TokenType.OR);
-        keyWords.put("nil", TokenType.NIL);
-    }};
-    
+    private final List<Token> tokens = new ArrayList<>();
+    // > scan-state
     private int start = 0;
     private int current = 0;
     private int line = 1;
+    // < scan-state
 
     Scanner(String source) {
         this.source = source;
     }
 
-    /**
-     * ScanTokens follows the principle of scanning until we reach the final
-     * character of the source string. Each time updating start, current, line
-     * to their respective postions and creating a new Token.
-     * 
-     * @param source String associate to a line of input
-     * @return List<Token> that are generated from scanning
-     */
-    public List<Token> scanTokens(String source) {
+    // > scan-tokens
+    public List<Token> scanTokens() {
         while (!isAtEnd()) {
             // We are at the beginning of the next lexeme.
             start = current;
@@ -50,115 +56,217 @@ public class Scanner {
         return tokens;
     }
 
+    // < scan-tokens
+    // > scan-token
     private void scanToken() {
         char c = advance();
         switch (c) {
-            case '(':
-                addToken(LEFT_PAREN);
-                break;
-            case ')':
-                addToken(RIGHT_PAREN);
-                break;
-            case '{':
-                addToken(LEFT_BRACE);
-                break;
-            case '}':
-                addToken(RIGHT_BRACE);
-                break;
-            case ',':
-                addToken(COMMA);
-                break;
-            case '.':
-                addToken(DOT);
-                break;
-            case '-':
-                addToken(MINUS);
-                break;
-            case '+':
-                addToken(PLUS);
-                break;
-            case ';':
-                addToken(SEMICOLON);
-                break;
-            case '*':
-                addToken(STAR);
-                break;
-            case '!':
-                addToken((match('=') ? BANG_EQUAL : BANG));
-                break;
-            case '<':
-                addToken((match('=') ? LESS_EQUAL: LESS));
-                break;
-            case '>':
-                addToken((match('=') ? GREATER_EQUAL : GREATER));
-                break;
-            case '=':
-                addToken((match('=')) ? EQUAL_EQUAL : EQUAL);
-                break;
-            case '/':
-                if (match('/')) {
-                    // Continue till the ending line 
-                    while(peek() != '\n' && !isAtEnd()){
-                        advance();
-                    }
-                } else {
-                    addToken(SLASH);
-                }
-                break;
-            case ' ':
-            case '\r':
-            case '\t':
-                // Ignore whitespace.
-                break;
-        
-            case '\n':
-                line++;
-                break;
-            case '"':   // String literal
-                string();
-                break;
-            default:
-                FailLox.error(line, "Unexpected Character");
-                break;
+        case '(':
+            addToken(LEFT_PAREN);
+            break;
+        case ')':
+            addToken(RIGHT_PAREN);
+            break;
+        case '{':
+            addToken(LEFT_BRACE);
+            break;
+        case '}':
+            addToken(RIGHT_BRACE);
+            break;
+        case ',':
+            addToken(COMMA);
+            break;
+        case '.':
+            addToken(DOT);
+            break;
+        case '-':
+            addToken(MINUS);
+            break;
+        case '+':
+            addToken(PLUS);
+            break;
+        case ';':
+            addToken(SEMICOLON);
+            break;
+        case '*':
+            addToken(STAR);
+            break; // [slash]
+        // > two-char-tokens
+        case '!':
+            addToken(match('=') ? BANG_EQUAL : BANG);
+            break;
+        case '=':
+            addToken(match('=') ? EQUAL_EQUAL : EQUAL);
+            break;
+        case '<':
+            addToken(match('=') ? LESS_EQUAL : LESS);
+            break;
+        case '>':
+            addToken(match('=') ? GREATER_EQUAL : GREATER);
+            break;
+        // < two-char-tokens
+        // > slash
+        case '/':
+            if (match('/')) {
+                // A comment goes until the end of the line.
+                while (peek() != '\n' && !isAtEnd())
+                    advance();
+            } else {
+                addToken(SLASH);
+            }
+            break;
+        // < slash
+        // > whitespace
+
+        case ' ':
+        case '\r':
+        case '\t':
+            // Ignore whitespace.
+            break;
+
+        case '\n':
+            line++;
+            break;
+        // < whitespace
+        // > string-start
+
+        case '"':
+            string();
+            break;
+        // < string-start
+        // > char-error
+
+        default:
+            /*
+             * Scanning char-error < Scanning digit-start Lox.error(line,
+             * "Unexpected character.");
+             */
+            // > digit-start
+            if (isDigit(c)) {
+                number();
+                // > identifier-start
+            } else if (isAlpha(c)) {
+                identifier();
+                // < identifier-start
+            } else {
+                FailLox.error(line, "Unexpected character.");
+            }
+            // < digit-start
+            break;
+        // < char-error
         }
     }
 
+    // < scan-token
+    // > identifier
+    private void identifier() {
+        while (isAlphaNumeric(peek()))
+            advance();
+
+        /*
+         * Scanning identifier < Scanning keyword-type addToken(IDENTIFIER);
+         */
+        // > keyword-type
+        String text = source.substring(start, current);
+        TokenType type = keywords.get(text);
+        if (type == null)
+            type = IDENTIFIER;
+        addToken(type);
+        // < keyword-type
+    }
+
+    // < identifier
+    // > number
+    private void number() {
+        while (isDigit(peek()))
+            advance();
+
+        // Look for a fractional part.
+        if (peek() == '.' && isDigit(peekNext())) {
+            // Consume the "."
+            advance();
+
+            while (isDigit(peek()))
+                advance();
+        }
+
+        addToken(NUMBER, Double.parseDouble(source.substring(start, current)));
+    }
+
+    // < number
+    // > string
     private void string() {
         while (peek() != '"' && !isAtEnd()) {
-            if (peek() == '\n') {
+            if (peek() == '\n')
                 line++;
-            }
+            advance();
         }
 
         if (isAtEnd()) {
-            FailLox.error(line, "Unterminated Error");
+            FailLox.error(line, "Unterminated string.");
+            return;
         }
 
-        // Closing "
+        // The closing ".
         advance();
-        String stringLiteral = source.substring(start + 1, current - 1);
-        addToken(STRING, stringLiteral);
+
+        // Trim the surrounding quotes.
+        String value = source.substring(start + 1, current - 1);
+        addToken(STRING, value);
     }
 
-    private char peek() {
-        if (isAtEnd()) return '\0';
-        return this.source.charAt(current);
-    }
-
-    /**
-     * Checks to see if the next character is the expected character given it's not 
-     * at the end of the string
-     * @param expected  a character that is the expected next character
-     * @return  boolean if the next character is the expected one
-     */
+    // < string
+    // > match
     private boolean match(char expected) {
-        if (isAtEnd()) return false;
-        if (source.charAt(current) != expected) return false;
+        if (isAtEnd())
+            return false;
+        if (source.charAt(current) != expected)
+            return false;
 
         current++;
         return true;
     }
 
+    // < match
+    // > peek
+    private char peek() {
+        if (isAtEnd())
+            return '\0';
+        return source.charAt(current);
+    }
+
+    // < peek
+    // > peek-next
+    private char peekNext() {
+        if (current + 1 >= source.length())
+            return '\0';
+        return source.charAt(current + 1);
+    } // [peek-next]
+    // < peek-next
+    // > is-alpha
+
+    private boolean isAlpha(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    }
+
+    private boolean isAlphaNumeric(char c) {
+        return isAlpha(c) || isDigit(c);
+    }
+
+    // < is-alpha
+    // > is-digit
+    private boolean isDigit(char c) {
+        return c >= '0' && c <= '9';
+    } // [is-digit]
+    // < is-digit
+    // > is-at-end
+
+    private boolean isAtEnd() {
+        return current >= source.length();
+    }
+
+    // < is-at-end
+    // > advance-and-add-token
     private char advance() {
         return source.charAt(current++);
     }
@@ -166,13 +274,10 @@ public class Scanner {
     private void addToken(TokenType type) {
         addToken(type, null);
     }
-    
+
     private void addToken(TokenType type, Object literal) {
         String text = source.substring(start, current);
         tokens.add(new Token(type, text, literal, line));
     }
-
-    private boolean isAtEnd() {
-        return current >= this.source.length();
-    }
+    // < advance-and-add-token
 }
