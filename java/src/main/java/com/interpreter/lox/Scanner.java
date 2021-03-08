@@ -95,12 +95,62 @@ public class Scanner {
             case '=':
                 addToken((match('=')) ? EQUAL_EQUAL : EQUAL);
                 break;
+            case '/':
+                if (match('/')) {
+                    // Continue till the ending line 
+                    while(peek() != '\n' && !isAtEnd()){
+                        advance();
+                    }
+                } else {
+                    addToken(SLASH);
+                }
+                break;
+            case ' ':
+            case '\r':
+            case '\t':
+                // Ignore whitespace.
+                break;
+        
+            case '\n':
+                line++;
+                break;
+            case '"':   // String literal
+                string();
+                break;
             default:
                 FailLox.error(line, "Unexpected Character");
                 break;
         }
     }
 
+    private void string() {
+        while (peek() != '"' && !isAtEnd()) {
+            if (peek() == '\n') {
+                line++;
+            }
+        }
+
+        if (isAtEnd()) {
+            FailLox.error(line, "Unterminated Error");
+        }
+
+        // Closing "
+        advance();
+        String stringLiteral = source.substring(start + 1, current - 1);
+        addToken(STRING, stringLiteral);
+    }
+
+    private char peek() {
+        if (isAtEnd()) return '\0';
+        return this.source.charAt(current);
+    }
+
+    /**
+     * Checks to see if the next character is the expected character given it's not 
+     * at the end of the string
+     * @param expected  a character that is the expected next character
+     * @return  boolean if the next character is the expected one
+     */
     private boolean match(char expected) {
         if (isAtEnd()) return false;
         if (source.charAt(current) != expected) return false;
