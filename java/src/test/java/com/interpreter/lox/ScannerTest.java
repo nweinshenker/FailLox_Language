@@ -29,9 +29,14 @@ public class ScannerTest {
     }
 
     @Test
-    public void test_list() {
-        for (int i = 0; i < 10; i++) {
-            assertEquals(list.get(i), list2.get(i));
-        }
+    public void testAddComments() {
+        String line = "/*How's it going sire*/";
+        List<Token> list;
+        
+        Scanner scan = new Scanner(line);
+        list = scan.scanTokens();
+
+        assertEquals("How's it going sire", list.get(0).lexeme);
     }
+
 }
