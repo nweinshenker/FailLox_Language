@@ -111,7 +111,11 @@ class Scanner {
                 // A comment goes until the end of the line.
                 while (peek() != '\n' && !isAtEnd())
                     advance();
-            } else {
+            } else if (match('*')) {
+                // TOD0
+                break; 
+            }
+            else {
                 addToken(SLASH);
             }
             break;
@@ -127,56 +131,37 @@ class Scanner {
         case '\n':
             line++;
             break;
-        // < whitespace
-        // > string-start
 
         case '"':
             string();
             break;
-        // < string-start
-        // > char-error
 
         default:
-            /*
-             * Scanning char-error < Scanning digit-start Lox.error(line,
-             * "Unexpected character.");
-             */
-            // > digit-start
             if (isDigit(c)) {
                 number();
-                // > identifier-start
             } else if (isAlpha(c)) {
                 identifier();
-                // < identifier-start
             } else {
                 FailLox.error(line, "Unexpected character.");
             }
-            // < digit-start
             break;
-        // < char-error
         }
     }
 
-    // < scan-token
-    // > identifier
+
     private void identifier() {
         while (isAlphaNumeric(peek()))
             advance();
 
-        /*
-         * Scanning identifier < Scanning keyword-type addToken(IDENTIFIER);
-         */
-        // > keyword-type
+
         String text = source.substring(start, current);
         TokenType type = keywords.get(text);
         if (type == null)
             type = IDENTIFIER;
         addToken(type);
-        // < keyword-type
     }
 
-    // < identifier
-    // > number
+
     private void number() {
         while (isDigit(peek()))
             advance();
